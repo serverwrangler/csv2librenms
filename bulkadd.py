@@ -2,6 +2,8 @@
 import config
 import math
 import requests
+import ipaddress
+from ipaddress import IPv4Address
 import pandas as pd
 
 # Setup Requests Headers
@@ -14,7 +16,7 @@ request_headers = {"Content-Type": "application/json",
                    }
 
 def device_add(add_request):
-    api_url = "http://{}/api/v0/devices".format(config.librenms_ipaddress)
+    api_url = "https://{}/api/v0/devices".format(config.librenms_ipaddress)
     r = requests.post(api_url, json=add_request, headers=request_headers)
     print(r.text)
 
@@ -32,44 +34,32 @@ except FileNotFoundError:
 
 for index, row in df.iterrows():
     try:
-        if math.isnan(row['ro']):
-            # Add to Librenms as PING only Device
-            # Create JSON data for API delivery
-            device = {"hostname":row['hostname'],
-                      "sysName":row['sysname'],
-                      "hardware":row['hardware'],
-                      "force_add":"true",
-                      "snmp_disable":"true"
-                      }
-            # Add device to LibreNMS.
-            device_add(device)
-
-            # Update device with OS Type if provided
-            try:
-                if math.isnan(row['os']):
-                    pass
-            except:
-                ostype = {"field": ["os"],
-                          "data": [row['os']]
-                          }
-                device_update(row['hostname'], ostype)
-
-
-            # Update device with syslocation if provided
-            if math.isnan(row['location_id']):
-                pass
-            else:
-                location = {"field": ["location_id", "override_sysLocation"],
-                            "data": [row['location_id'], 1]
-                            }
-                device_update(row['hostname'], location)
-
-    except:
+        #DEBUG
+        #print(row)
         # Add Device to LibreNMS via SNMP
+        desc = row["Name:String(32):Required"]
+        hostname = row["IP Address:Subnets(a.b.c.d/m#....):Required"]
+        size = len(hostname)
+        ip = hostname[:size - 3]
+        community = row["SNMP:RO Community:String(32)"]
+        #DEBUG
+        #print(hostname)
+        #print(ip)
+        #print(community)
         add_device = {
-            "hostname":row['hostname'],
-            "community":row['ro'],
+            "hostname":ip,
+            "community":community,
             "version":"v2c"
             }
+        print(f"Attempting to add device {desc}...")
         device_add(add_device)
+    except OSError as err:
+        print("OS error: {0}".format(err))
+    except ValueError:
+        print("Could not convert data to an integer.")
+    except BaseException as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
+    except:
+        print("shit went sideways... :-(")
 quit()
