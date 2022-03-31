@@ -1,6 +1,6 @@
 # csv2librenms
 
-CSV bulk importer for LibreNMS, import devices as SNMP or PING only.
+Cisco ISE CSV Export bulk importer for LibreNMS, import devices as SNMP or PING only.
 
 This will add a device for each row in data/bulkimport.csv.
 
@@ -8,6 +8,13 @@ Please add your LibreNMS API key in the config.py file. You can generate
 them via the LibreNMS webgui. 
 
 **Direction: python ./bulkadd.py**
+
+---
+### ISE CSV File Export
+
+- Open Cisco ISE website and navigate to Administration->Network Resources->Network Devices
+- Then Select Export -> Export All
+- Save the resulting file as bulkimport.csv in the data directory with this project
 
 ---
 ### CSV File Example
